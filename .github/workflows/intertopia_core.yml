@@ -99,3 +99,38 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
+
+name: Intertopía - Ejecución de Ciclo y Validación
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Ejecución cada 5 segundos para flujo constante de valor
+  workflow_dispatch: # Permite ejecución manual por el Administrador (VHRS)
+
+jobs:
+  asset_management:
+    runs-on: ubuntu-latest
+    env:
+      ADMIN_ID: "Víctor Hugo Ramírez Salgado"
+      VAULT_NAME: "Víctor Hugo's Personal Vault"
+      GOLD_LIMIT: 25.0
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python Environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Execute Intertopía Asset Script
+        run: |
+          python main_intertopia.py
+        env:
+          [span_2](start_span)SIGNATURE_VALIDATION: "731756*" # Firma de autoridad administrativa[span_2](end_span)
+
+      - name: Issue Property Certificates
+        if: success()
+        run: |
+          echo "Generando Certificado de Propiedad y Plusvalía de Activos..."
+          # [span_3](start_span)Integración con el sistema de emisión automática[span_3](end_span)
+
