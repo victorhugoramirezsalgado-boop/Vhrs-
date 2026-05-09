@@ -1,0 +1,1 @@
+"copiar-estraer en el chat el archivo código de interfaz con github/copilot"
