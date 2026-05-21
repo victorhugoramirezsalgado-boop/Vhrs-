@@ -160,3 +160,33 @@ jobs:
         run: test "$(find dist/*.tar.gz | wc -l | xargs)" = 1 && test "$(find dist/*.whl | wc -l | xargs)" = 1
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b
+name: 1NTERTOPIA Terminal Engine
+
+on:
+  push:
+    branches: [ main ] # Se activa automáticamente al actualizar tu repositorio
+
+jobs:
+  run-terminal:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Clonar repositorio actual
+      uses: actions/checkout@v4
+
+    - name: Configurar entorno Python
+      uses: actions/setup-python@v5
+      with:
+        python-python: '3.10'
+
+    - name: Instalar dependencias del Sistema
+      run: |
+        pip install google-generativeai PyGithub
+
+    - name: Ejecutar Núcleo Analítico
+      env:
+        # Vinculación segura de llaves desde los secretos de GitHub
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        python terminal.py
