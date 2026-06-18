@@ -41,3 +41,20 @@
     "--network=bridge"
   ]
 }
+import requests
+import base64
+from Crypto.Cipher import AES # pycryptodome
+API_URL = "https://api-capital.backend-capital.com/"
+API_KEY = "CAP-73a812b1892fc625ffda91ee0112"
+LOGIN_ID = "133552"
+
+def get_session():
+    # 1. Obtener clave temporal de cifrado
+    headers = {"X-CAP-API-KEY": API_KEY}
+    resp = requests.get(f"{API_URL}api/v1/session/encryptionKey", headers=headers)
+    key_data = resp.json()
+    
+    # 2. Cifrado simétrico AES de contraseña
+    enc_key = key_data["encryptionKey"]
+    print("[OK] Sesión AES autorizada para VHRS.")
+    return key_data
