@@ -58,3 +58,32 @@ def get_session():
     enc_key = key_data["encryptionKey"]
     print("[OK] Sesión AES autorizada para VHRS.")
     return key_data
+    import requests
+import base64
+from Crypto.Cipher import AES  # pip install pycryptodome
+
+API_URL = "https://api-capital.backend-capital.com/"
+API_KEY = "CAP-73a812b1892fc625ffda91ee0112"
+LOGIN_ID = "133552"
+
+def get_authorized_session():
+    # 1. Obtener la clave simétrica temporal
+    headers = {"X-CAP-API-KEY": API_KEY}
+    resp_key = requests.get(f"{API_URL}api/v1/session/encryptionKey", headers=headers)
+    key_data = resp_key.json()
+    
+    # 2. POST /session para iniciar la conexión segura
+    payload = {
+        "identifier": "vhrs.administrator",
+        "password": "PASSWORD_CIFRADA_AES_128",
+        "encryptedPassword": True
+    }
+    resp_sess = requests.post(f"{API_URL}api/v1/session", json=payload, headers=headers)
+    
+    # ¡CRÍTICO! Extraer los tokens desde las CABECERAS de respuesta
+    cst = resp_sess.headers.get("CST")
+    x_security = resp_sess.headers.get("X-SECURITY-TOKEN")
+    
+    print(f"[OK] CST obtenido: {cst}")
+    print(f"[OK] X-SECURITY obtenido: {x_security}")
+    return cst, x_security
