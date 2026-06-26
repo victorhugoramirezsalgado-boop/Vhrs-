@@ -27,3 +27,4 @@ def autolink(pattern: str, prefix: str):
         return [node], []
 
     return role
+    claude /path/to/repo
