@@ -58,3 +58,31 @@ def get_session():
     enc_key = key_data["encryptionKey"]
     print("[OK] Sesión AES autorizada para VHRS.")
     return key_data
+    {
+  "name": "typing_extensions-docs",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bullseye",
+
+  "postCreateCommand": "pip install --upgrade pip && pip install sphinx docutils sphinx-autobuild alabaster",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "lextudio.restructuredtext"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+      }
+    }
+  },
+
+  "forwardPorts": [8000],
+
+  "portsAttributes": {
+    "8000": {
+      "label": "Sphinx docs (sphinx-autobuild)",
+      "onAutoForward": "openPreview"
+    }
+  }
+}
