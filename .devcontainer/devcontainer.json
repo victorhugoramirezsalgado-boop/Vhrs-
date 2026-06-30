@@ -211,3 +211,5 @@ def get_session():
 if __name__ == "__main__":
     session = get_session()
     print(session)
+    requests>=2.31.0
+pycryptodome>=3.20.0
