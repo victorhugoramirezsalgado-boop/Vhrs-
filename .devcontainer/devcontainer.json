@@ -86,3 +86,69 @@ def get_session():
     }
   }
 }
+cat > /home/claude/output/capital_session.py << 'PYEOF'
+import requests
+import base64
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_v1_5
+import time
+
+API_URL = "https://api-capital.backend-capital.com/"
+API_KEY = "TU_API_KEY_AQUI"
+IDENTIFIER = "TU_EMAIL_AQUI"
+PASSWORD = "TU_PASSWORD_AQUI"
+
+
+def get_encryption_key():
+    """1. Obtener clave pública RSA temporal y timestamp"""
+    headers = {"X-CAP-API-KEY": API_KEY}
+    resp = requests.get(f"{API_URL}api/v1/session/encryptionKey", headers=headers)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def encrypt_password(password: str, encryption_key: str, timestamp: int) -> str:
+    """2. Cifrado RSA de la contraseña (requerido por Capital.com)"""
+    key_bytes = base64.b64decode(encryption_key)
+    rsa_key = RSA.importKey(key_bytes)
+    cipher = PKCS1_v1_5.new(rsa_key)
+
+    payload = f"{password}|{timestamp}".encode("utf-8")
+    encrypted = cipher.encrypt(payload)
+    return base64.b64encode(encrypted).decode("utf-8")
+
+
+def get_session():
+    key_data = get_encryption_key()
+    encryption_key = key_data["encryptionKey"]
+    timestamp = key_data["timeStamp"]
+
+    encrypted_password = encrypt_password(PASSWORD, encryption_key, timestamp)
+
+    headers = {"X-CAP-API-KEY": API_KEY, "Content-Type": "application/json"}
+    body = {
+        "identifier": IDENTIFIER,
+        "password": encrypted_password,
+        "encryptedPassword": True,
+    }
+
+    resp = requests.post(f"{API_URL}api/v1/session", headers=headers, json=body)
+    resp.raise_for_status()
+
+    cst = resp.headers.get("CST")
+    security_token = resp.headers.get("X-SECURITY-TOKEN")
+
+    print("[OK] Sesión autorizada.")
+    return {"CST": cst, "X-SECURITY-TOKEN": security_token}
+
+
+if __name__ == "__main__":
+    session = get_session()
+    print(session)
+PYEOF
+python3 -m py_compile /home/claude/output/capital_session.py && echo "Sintaxis OK"
+{
+  "returncode" : 0,
+  "stdout" : "Sintaxis OK\n",
+  "stderr" : ""
+}
