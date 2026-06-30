@@ -1,4 +1,6 @@
-{
+{requests>=2.31.0
+pycryptodome>=3.20.0
+
   "name": "Vhrs- Development Environment",
   "image": "mcr.microsoft.com/devcontainers/python:3.11-bullseye",
   "features": {
