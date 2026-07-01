@@ -1,0 +1,56 @@
+# GITIGNORE - Asegurar que datos privados nunca se suban
+# ================================================
+
+# Variables de entorno privadas
+.env
+.env.local
+.env.*.local
+
+# Archivos de configuración privada
+.env.secure
+config.private.py
+secrets/
+
+# Logs de sistema
+logs/
+*.log
+
+# Cachés
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Datos sensibles
+*.key
+*.pem
+*.pfx
+*.p12
+audit_logs/
+transfer_history/
+
+# Archivos temporales
+tmp/
+temp/
+*.tmp
+
+# Base de datos local
+*.db
+*.sqlite
+*.sqlite3
+
+# Dependencias
+venv/
+env/
+.venv/
+
+# Compilados
+dist/
+build/
