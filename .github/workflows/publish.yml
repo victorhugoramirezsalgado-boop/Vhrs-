@@ -2,12 +2,12 @@ name: 1NTERTOPIA Terminal Engine
 
 on:
   push:
-    branches: [ main ] # Se activa automáticamente al hacer cambios en tu repositorio
+    branches: [ main ]  # Se activa automáticamente al hacer cambios en tu repositorio
 
 jobs:
   run-analytical-core:
     runs-on: ubuntu-latest
-
+    name: 1NTERTOPIA Terminal Engine
     steps:
       - name: 1. Clonar Entorno Privado
         uses: actions/checkout@v4
