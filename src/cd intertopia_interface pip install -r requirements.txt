@@ -6,3 +6,4 @@ python cli.py repo-info
 python cli.py repo-archivo main.py
 python cli.py repo-commits
 python cli.py repo-workflows
+python dashboard.py
