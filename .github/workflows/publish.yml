@@ -1,29 +1,6 @@
-name: 1NTERTOPIA Terminal Engine
-
-on:
-  push:
-    branches: [ main ]  # Se activa automáticamente al hacer cambios en tu repositorio
-
-jobs:
-  run-analytical-core:
-    runs-on: ubuntu-latest
-    name: 1NTERTOPIA Terminal Engine
-    steps:
-      - name: 1. Clonar Entorno Privado
-        uses: actions/checkout@v4
-
-      - name: 2. Inicializar Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: 3. Inyectar Librerías del Núcleo
-        run: |
-          pip install google-generativeai PyGithub
-
       - name: 4. Ejecutar Terminal Inteligente
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python terminal.py
+          python main.py
