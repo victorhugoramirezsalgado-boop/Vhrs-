@@ -45,8 +45,8 @@ import requests
 import base64
 from Crypto.Cipher import AES # pycryptodome
 API_URL = "https://api-capital.backend-capital.com/"
-API_KEY = "CAP-73a812b1892fc625ffda91ee0112"
-LOGIN_ID = "133552"
+API_KEY = "Revoke"
+LOGIN_ID = "Revoke"
 
 def get_session():
     # 1. Obtener clave temporal de cifrado
