@@ -1,1 +1,8 @@
 export GITHUB_TOKEN="tu_token_aqui"
+python cli.py status
+python cli.py precios
+python cli.py operar
+python cli.py repo-info
+python cli.py repo-archivo main.py
+python cli.py repo-commits
+python cli.py repo-workflows
