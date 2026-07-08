@@ -4,3 +4,22 @@
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python main.py
+      - name: Publicar patrimonio real al Gist
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          GIST_ID: TU_GIST_ID_AQUI
+        run: |
+          python -c "
+          import json, requests, os
+          with open('patrimonio_base.json') as f:
+              patrimonio = json.load(f)
+          with open('historial_ciclos.json') as f:
+              historial = json.load(f)
+          payload = {'files': {'patrimonio_actual.json': {'content': json.dumps({'patrimonio': patrimonio, 'historial': historial}, indent=2)}}}
+          r = requests.patch(
+              f'https://api.github.com/gists/{os.environ[\"GIST_ID\"]}',
+              headers={'Authorization': f'token {os.environ[\"GIST_TOKEN\"]}'},
+              json=payload
+          )
+          print(r.status_code, r.text[:200])
+          "
