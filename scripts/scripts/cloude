@@ -139,3 +139,79 @@ export default function IntertopiaClaudeChat() {
     </div>
   );
 }
+import json
+import os
+
+ARCHIVO_ESTADO = "patrimonio_base.json"
+ARCHIVO_HISTORIAL = "historial_ciclos.json"
+
+
+def cargar_patrimonio_base():
+    """Lee el patrimonio base guardado de la corrida anterior.
+    Si no existe el archivo (primera vez), devuelve None."""
+    if os.path.exists(ARCHIVO_ESTADO):
+        with open(ARCHIVO_ESTADO, "r") as f:
+            data = json.load(f)
+            return data.get("patrimonio_base_usd")
+    return None
+
+
+def guardar_patrimonio_base(valor):
+    """Guarda el patrimonio actual como base para la próxima corrida."""
+    with open(ARCHIVO_ESTADO, "w") as f:
+        json.dump({"patrimonio_base_usd": valor}, f, indent=2)
+
+
+def guardar_ciclo_en_historial(resultado):
+    """Agrega el resultado de este ciclo al historial acumulado."""
+    historial = []
+    if os.path.exists(ARCHIVO_HISTORIAL):
+        with open(ARCHIVO_HISTORIAL, "r") as f:
+            historial = json.load(f)
+    historial.append(resultado)
+    with open(ARCHIVO_HISTORIAL, "w") as f:
+        json.dump(historial, f, indent=2)
+
+
+def ejecutar_ciclo_24h():
+    """Calcula el beneficio del ciclo (patrimonio actual - base) y lo
+    segrega 70% V.H.R.S / 30% Intertopía. El patrimonio base persiste
+    entre corridas leyendo/escribiendo patrimonio_base.json."""
+
+    reporte = get_patrimonio_actual()
+    patrimonio_actual = reporte["patrimonio_total_usd"]
+
+    patrimonio_base = cargar_patrimonio_base()
+
+    # Primera corrida real: no hay base guardada todavía.
+    # El capital depositado se vuelve la base, no se reparte como ganancia.
+    if patrimonio_base is None:
+        patrimonio_base = patrimonio_actual
+        beneficio = 0.0
+    else:
+        beneficio = patrimonio_actual - patrimonio_base
+
+    if beneficio > 0:
+        reparto_vhrs = round(beneficio * SPLIT_VHRS, 2)
+        reparto_intertopia = round(beneficio * SPLIT_INTERTOPIA, 2)
+    else:
+        reparto_vhrs = 0.0
+        reparto_intertopia = 0.0
+
+    resultado = {
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+        "patrimonio_actual_usd": patrimonio_actual,
+        "patrimonio_base_usd": patrimonio_base,
+        "beneficio_usd": round(beneficio, 2),
+        "reparto": {
+            "vhrs_usd": reparto_vhrs,
+            "intertopia_usd": reparto_intertopia,
+            "split": f"{int(SPLIT_VHRS*100)}/{int(SPLIT_INTERTOPIA*100)}",
+        },
+    }
+
+    # El patrimonio de HOY se convierte en la base para el PRÓXIMO ciclo
+    guardar_patrimonio_base(patrimonio_actual)
+    guardar_ciclo_en_historial(resultado)
+
+    return resultado
