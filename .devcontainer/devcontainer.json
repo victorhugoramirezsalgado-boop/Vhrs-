@@ -216,3 +216,280 @@ tu-repo/
 │   └── devcontainer.json
 ├── requirements-dev.txt
 └── capital_session.py
+"""
+Intertopía - Sistema de Simulación y Seguimiento de Ciclos Financieros
+=========================================================================
+Versión consolidada (2026-07)
+
+Responsabilidades:
+- Obtener precios de mercado en vivo (BTC vía CoinGecko, oro/plata vía goldprice.org)
+- Ejecutar un ciclo financiero de 24h aplicando el reparto 90/10 (Víctor Hugo / Intertopía)
+- Acumular un "fondo de respaldo" en plata (30% de la parte de Víctor Hugo)
+- Usar la parte de Intertopía (10%) para comprar plata como reserva propia
+- Aplicar un sistema de cascada de pérdidas cuando el ciclo cierra en rojo
+- Persistir el estado (patrimonio base + historial) en JSON para sobrevivir
+  entre ejecuciones de GitHub Actions
+
+IMPORTANTE - Persistencia entre corridas de GitHub Actions:
+Este script escribe patrimonio_base.json e historial_ciclos.json en disco,
+pero cada ejecución de Actions corre en un contenedor limpio. Para que el
+estado sobreviva de un ciclo al siguiente, el workflow (publish.yml) DEBE
+hacer commit y push de estos dos archivos de vuelta al repo al final de
+cada corrida. Ejemplo de pasos a agregar al final del job:
+
+    - name: Guardar estado
+      run: |
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git add patrimonio_base.json historial_ciclos.json
+        git diff --staged --quiet || git commit -m "Actualiza estado del ciclo [skip ci]"
+        git push
+"""
+
+import json
+import os
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+import requests
+
+# ----------------------------------------------------------------------------
+# CONFIGURACIÓN
+# ----------------------------------------------------------------------------
+
+BASE_DIR = Path(__file__).resolve().parent
+PATRIMONIO_BASE_FILE = BASE_DIR / "patrimonio_base.json"
+HISTORIAL_FILE = BASE_DIR / "historial_ciclos.json"
+
+SPLIT_VHRS = 0.90          # Parte de Víctor Hugo
+SPLIT_INTERTOPIA = 0.10    # Parte de Intertopía (reserva propia en plata)
+FONDO_RESPALDO_PCT = 0.30  # % de la parte de Víctor Hugo que va al fondo de respaldo (plata)
+
+# Valores de referencia manuales para activos sin API pública gratuita confiable.
+# Sobreescribibles con variables de entorno / GitHub Secrets-Vars.
+PRECIO_RODIO_USD_OZ = float(os.getenv("PRECIO_RODIO_USD_OZ", "5200.0"))      # placeholder manual
+PRECIO_ENERGIA_USD_MWH = float(os.getenv("PRECIO_ENERGIA_USD_MWH", "45.0"))  # placeholder manual
+
+PATRIMONIO_BASE_USD_INICIAL = float(os.getenv("PATRIMONIO_BASE_USD_INICIAL", "1000.0"))
+
+HEADERS = {"User-Agent": "Intertopia/1.0"}
+TIMEOUT = 10
+
+
+# ----------------------------------------------------------------------------
+# OBTENCIÓN DE PRECIOS EN VIVO
+# ----------------------------------------------------------------------------
+
+def obtener_precio_btc_usd():
+    try:
+        r = requests.get(
+            "https://api.coingecko.com/api/v3/simple/price",
+            params={"ids": "bitcoin", "vs_currencies": "usd"},
+            headers=HEADERS, timeout=TIMEOUT,
+        )
+        r.raise_for_status()
+        return float(r.json()["bitcoin"]["usd"])
+    except Exception as e:
+        print(f"[WARN] Fallo al obtener precio BTC: {e}", file=sys.stderr)
+        return None
+
+
+def obtener_precios_oro_plata():
+    try:
+        r = requests.get(
+            "https://data-asg.goldprice.org/dbXRates/USD",
+            headers=HEADERS, timeout=TIMEOUT,
+        )
+        r.raise_for_status()
+        data = r.json()["items"][0]
+        return {
+            "oro_usd_oz": float(data["xauPrice"]),
+            "plata_usd_oz": float(data["xagPrice"]),
+        }
+    except Exception as e:
+        print(f"[WARN] Fallo al obtener oro/plata: {e}", file=sys.stderr)
+        return None
+
+
+def obtener_precio_rodio_usd_oz():
+    # No existe todavía una fuente pública gratuita confiable para rodio.
+    # Placeholder manual hasta integrar una API de pago (p. ej. metals-api.com).
+    return PRECIO_RODIO_USD_OZ
+
+
+def obtener_precio_energia_usd_mwh():
+    # Igual que rodio: placeholder manual, pendiente de fuente en vivo.
+    return PRECIO_ENERGIA_USD_MWH
+
+
+# ----------------------------------------------------------------------------
+# PERSISTENCIA DE ESTADO
+# ----------------------------------------------------------------------------
+
+def cargar_patrimonio_base():
+    if PATRIMONIO_BASE_FILE.exists():
+        try:
+            with open(PATRIMONIO_BASE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"[WARN] No se pudo leer {PATRIMONIO_BASE_FILE.name}, se reinicia: {e}", file=sys.stderr)
+
+    return {
+        "patrimonio_base_usd": PATRIMONIO_BASE_USD_INICIAL,
+        "fondo_respaldo_oz_plata": 0.0,
+        "reserva_intertopia_oz_plata": 0.0,
+        "ultima_actualizacion": None,
+    }
+
+
+def guardar_patrimonio_base(estado):
+    estado["ultima_actualizacion"] = datetime.now(timezone.utc).isoformat()
+    with open(PATRIMONIO_BASE_FILE, "w", encoding="utf-8") as f:
+        json.dump(estado, f, indent=2, ensure_ascii=False)
+
+
+def guardar_ciclo_en_historial(registro):
+    historial = []
+    if HISTORIAL_FILE.exists():
+        try:
+            with open(HISTORIAL_FILE, "r", encoding="utf-8") as f:
+                historial = json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"[WARN] Historial corrupto, se reinicia: {e}", file=sys.stderr)
+            historial = []
+
+    historial.append(registro)
+    with open(HISTORIAL_FILE, "w", encoding="utf-8") as f:
+        json.dump(historial, f, indent=2, ensure_ascii=False)
+
+
+# ----------------------------------------------------------------------------
+# LÓGICA DE CICLO: REPARTO 90/10 Y CASCADA DE PÉRDIDAS
+# ----------------------------------------------------------------------------
+
+def aplicar_cascada_perdida(estado, perdida_usd, precio_plata_oz):
+    """
+    Cuando un ciclo cierra en rojo, la pérdida se cubre en este orden:
+      1. Fondo de respaldo (plata acumulada de la parte de Víctor Hugo)
+      2. Reserva de Intertopía (plata acumulada de la parte de Intertopía)
+      3. Patrimonio base (último recurso)
+    Devuelve un desglose de qué se usó para cubrir la pérdida.
+    """
+    desglose = {
+        "desde_fondo_respaldo_usd": 0.0,
+        "desde_reserva_intertopia_usd": 0.0,
+        "desde_patrimonio_base_usd": 0.0,
+    }
+    restante = perdida_usd
+
+    # 1. Fondo de respaldo
+    valor_fondo_usd = estado["fondo_respaldo_oz_plata"] * precio_plata_oz
+    usar_de_fondo = min(restante, valor_fondo_usd)
+    if usar_de_fondo > 0:
+        estado["fondo_respaldo_oz_plata"] -= usar_de_fondo / precio_plata_oz
+        desglose["desde_fondo_respaldo_usd"] = usar_de_fondo
+        restante -= usar_de_fondo
+
+    # 2. Reserva de Intertopía
+    if restante > 0:
+        valor_reserva_usd = estado["reserva_intertopia_oz_plata"] * precio_plata_oz
+        usar_de_reserva = min(restante, valor_reserva_usd)
+        if usar_de_reserva > 0:
+            estado["reserva_intertopia_oz_plata"] -= usar_de_reserva / precio_plata_oz
+            desglose["desde_reserva_intertopia_usd"] = usar_de_reserva
+            restante -= usar_de_reserva
+
+    # 3. Patrimonio base (último recurso; puede llevarlo a negativo si no alcanza)
+    if restante > 0:
+        estado["patrimonio_base_usd"] -= restante
+        desglose["desde_patrimonio_base_usd"] = restante
+
+    return desglose
+
+
+def ejecutar_ciclo(resultado_ciclo_usd):
+    """
+    resultado_ciclo_usd: ganancia (positivo) o pérdida (negativo) generada
+    en el ciclo de 24h por la lógica de trading/simulación (fuente externa
+    a este módulo, p. ej. Capital.com vía variables de entorno/secrets).
+    """
+    estado = cargar_patrimonio_base()
+
+    precio_btc = obtener_precio_btc_usd()
+    precios_metales = obtener_precios_oro_plata()
+    precio_rodio = obtener_precio_rodio_usd_oz()
+    precio_energia = obtener_precio_energia_usd_mwh()
+
+    if precios_metales is None:
+        print("[ERROR] No se pudieron obtener precios de oro/plata; se aborta el ciclo.", file=sys.stderr)
+        return None
+
+    precio_plata_oz = precios_metales["plata_usd_oz"]
+
+    registro = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "resultado_ciclo_usd": resultado_ciclo_usd,
+        "precios": {
+            "btc_usd": precio_btc,
+            "oro_usd_oz": precios_metales["oro_usd_oz"],
+            "plata_usd_oz": precio_plata_oz,
+            "rodio_usd_oz": precio_rodio,
+            "energia_usd_mwh": precio_energia,
+        },
+    }
+
+    if resultado_ciclo_usd >= 0:
+        # --- Ciclo positivo: reparto 90/10 ---
+        parte_vhrs = resultado_ciclo_usd * SPLIT_VHRS
+        parte_intertopia = resultado_ciclo_usd * SPLIT_INTERTOPIA
+
+        # 30% de la parte de Víctor Hugo va al fondo de respaldo, en plata
+        monto_fondo_respaldo = parte_vhrs * FONDO_RESPALDO_PCT
+        oz_plata_fondo = monto_fondo_respaldo / precio_plata_oz
+        estado["fondo_respaldo_oz_plata"] += oz_plata_fondo
+
+        # El resto de la parte de Víctor Hugo se suma al patrimonio base
+        estado["patrimonio_base_usd"] += (parte_vhrs - monto_fondo_respaldo)
+
+        # La parte de Intertopía compra plata como reserva propia
+        oz_plata_intertopia = parte_intertopia / precio_plata_oz
+        estado["reserva_intertopia_oz_plata"] += oz_plata_intertopia
+
+        registro["tipo"] = "ganancia"
+        registro["reparto"] = {
+            "parte_vhrs_usd": parte_vhrs,
+            "parte_intertopia_usd": parte_intertopia,
+            "fondo_respaldo_oz_plata_sumadas": oz_plata_fondo,
+            "reserva_intertopia_oz_plata_sumadas": oz_plata_intertopia,
+        }
+    else:
+        # --- Ciclo negativo: cascada de pérdidas ---
+        perdida = abs(resultado_ciclo_usd)
+        desglose = aplicar_cascada_perdida(estado, perdida, precio_plata_oz)
+        registro["tipo"] = "perdida"
+        registro["cascada"] = desglose
+
+    registro["estado_resultante"] = dict(estado)
+
+    guardar_patrimonio_base(estado)
+    guardar_ciclo_en_historial(registro)
+
+    return registro
+
+
+# ----------------------------------------------------------------------------
+# PUNTO DE ENTRADA (GitHub Actions)
+# ----------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    # El resultado real del ciclo debe venir de la lógica de trading/simulación
+    # (p. ej. una integración con Capital.com). Aquí se toma de una variable de
+    # entorno para no romper el flujo si esa integración aún no está conectada.
+    resultado = float(os.getenv("RESULTADO_CICLO_USD", "0.0"))
+    registro = ejecutar_ciclo(resultado)
+
+    if registro is None:
+        sys.exit(1)
+
+    print(json.dumps(registro, indent=2, ensure_ascii=False))
