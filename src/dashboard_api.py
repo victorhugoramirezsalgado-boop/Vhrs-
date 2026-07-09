@@ -1,4 +1,4 @@
-"""
+ni"""
 Dashboard Backend API - REST endpoints para datos del dashboard
 SOLO para Víctor Hugo Ramírez Salgado
 """
@@ -222,3 +222,137 @@ if __name__ == '__main__':
         debug=False,
         ssl_context='adhoc'
     )
+    import { useState, useRef, useEffect } from "react";
+import { Send, Loader2, Sparkles } from "lucide-react";
+
+// Interfaz de chat con Claude para Intertopía.
+// Paleta: base grafito (#14171A), acento oro viejo (#B8935A), plata fría (#C9CDD3)
+
+export default function IntertopiaClaudeChat() {
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        "Consola de Intertopía lista. Pregúntame sobre el sistema, precios de referencia o lógica del ciclo financiero.",
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  async function sendMessage() {
+    const text = input.trim();
+    if (!text || loading) return;
+
+    const newMessages = [...messages, { role: "user", content: text }];
+    setMessages(newMessages);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1000,
+          system:
+            "Eres el asistente técnico de Intertopía, un sistema conceptual de seguimiento de activos (oro, plata, Bitcoin, ITC coin). Responde en español, de forma breve y precisa.",
+          messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+      const data = await response.json();
+      const textBlock = (data.content || [])
+        .map((block) => (block.type === "text" ? block.text : ""))
+        .join("\n")
+        .trim();
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: textBlock || "No obtuve respuesta. Intenta de nuevo." },
+      ]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Error de conexión con Claude. Intenta de nuevo." },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-[#0F1113] p-4">
+      <div className="flex h-full max-h-[720px] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-[#2A2E33] bg-[#14171A] shadow-2xl">
+        <div className="flex items-center gap-3 border-b border-[#2A2E33] bg-[#17191C] px-5 py-4">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#B8935A] to-[#8A6A3E]">
+            <Sparkles size={16} className="text-[#0F1113]" />
+          </div>
+          <div>
+            <h1 className="text-sm font-semibold tracking-wide text-[#EDEBE6]">
+              Intertopía · Consola Claude
+            </h1>
+            <p className="text-xs text-[#7C828A]">Asistente del sistema</p>
+          </div>
+        </div>
+
+        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          {messages.map((m, i) => (
+            <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div
+                className={`max-w-[80%] rounded-lg px-4 py-2.5 text-sm leading-relaxed ${
+                  m.role === "user"
+                    ? "bg-[#B8935A] text-[#14171A]"
+                    : "bg-[#1E2226] text-[#C9CDD3] border border-[#2A2E33]"
+                }`}
+              >
+                {m.content}
+              </div>
+            </div>
+          ))}
+          {loading && (
+            <div className="flex justify-start">
+              <div className="flex items-center gap-2 rounded-lg border border-[#2A2E33] bg-[#1E2226] px-4 py-2.5 text-sm text-[#7C828A]">
+                <Loader2 size={14} className="animate-spin" />
+                Procesando
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+
+        <div className="border-t border-[#2A2E33] bg-[#17191C] p-3">
+          <div className="flex items-end gap-2">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Escribe tu mensaje..."
+              rows={1}
+              className="flex-1 resize-none rounded-lg border border-[#2A2E33] bg-[#0F1113] px-3 py-2.5 text-sm text-[#EDEBE6] placeholder-[#5A6068] outline-none focus:border-[#B8935A]"
+            />
+            <button
+              onClick={sendMessage}
+              disabled={loading || !input.trim()}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#B8935A] text-[#14171A] transition-opacity disabled:opacity-40"
+              aria-label="Enviar mensaje"
+            >
+              <Send size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
