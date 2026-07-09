@@ -1,25 +1,31 @@
-      - name: 4. Ejecutar Terminal Inteligente
+name: 1NTERTOPIA Terminal Engine
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  run-analytical-core:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: 2. Inicializar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 3. Inyectar Librerías
+        run: |
+          pip install google-generativeai requests
+
+      - name: 4. Ejecutar Terminal
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ALPACA_API_KEY_ID: ${{ secrets.ALPACA_API_KEY_ID }}
+          ALPACA_API_SECRET_KEY: ${{ secrets.ALPACA_API_SECRET_KEY }}
         run: |
           python main.py
-      - name: Publicar patrimonio real al Gist
-        env:
-          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
-          GIST_ID: TU_GIST_ID_AQUI
-        run: |
-          python -c "
-          import json, requests, os
-          with open('patrimonio_base.json') as f:
-              patrimonio = json.load(f)
-          with open('historial_ciclos.json') as f:
-              historial = json.load(f)
-          payload = {'files': {'patrimonio_actual.json': {'content': json.dumps({'patrimonio': patrimonio, 'historial': historial}, indent=2)}}}
-          r = requests.patch(
-              f'https://api.github.com/gists/{os.environ[\"GIST_ID\"]}',
-              headers={'Authorization': f'token {os.environ[\"GIST_TOKEN\"]}'},
-              json=payload
-          )
-          print(r.status_code, r.text[:200])
-          "
+
