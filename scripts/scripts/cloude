@@ -1,217 +1,197 @@
-import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, Sparkles } from "lucide-react";
-
-// Interfaz de chat con Claude para Intertopía.
-// Paleta: base grafito (#14171A), acento oro viejo (#B8935A) — referencia al activo
-// central del sistema (oro/plata) — y plata fría (#C9CDD3) para texto secundario.
-
-export default function IntertopiaClaudeChat() {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "Consola de Intertopía lista. Pregúntame sobre el sistema, precios de referencia o lógica del ciclo financiero.",
-    },
-  ]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const bottomRef = useRef(null);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
-
-  async function sendMessage() {
-    const text = input.trim();
-    if (!text || loading) return;
-
-    const newMessages = [...messages, { role: "user", content: text }];
-    setMessages(newMessages);
-    setInput("");
-    setLoading(true);
-
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 1000,
-          system:
-            "Eres el asistente técnico de Intertopía, un sistema conceptual de seguimiento de activos (oro, plata, Bitcoin, ITC coin). Responde en español, de forma breve y precisa.",
-          messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
-        }),
-      });
-      const data = await response.json();
-      const textBlock = (data.content || [])
-        .map((block) => (block.type === "text" ? block.text : ""))
-        .join("\n")
-        .trim();
-
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: textBlock || "No obtuve respuesta. Intenta de nuevo." },
-      ]);
-    } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Error de conexión con Claude. Intenta de nuevo." },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Intertopía — Antes / Después</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #101215;
+    color: #E8E6E1;
+    padding: 24px 16px 60px;
   }
-
-  function handleKeyDown(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+  h1 {
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 4px;
+    letter-spacing: 0.02em;
   }
+  .subtitle {
+    text-align: center;
+    color: #8B8F96;
+    font-size: 13px;
+    margin-bottom: 32px;
+  }
+  .section {
+    max-width: 480px;
+    margin: 0 auto 40px;
+  }
+  .section-label {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+  }
+  .label-antes { background: #3A1E1E; color: #E58989; }
+  .label-despues { background: #1E3A26; color: #7FCB9A; }
 
-  return (
-    <div className="flex h-screen w-full items-center justify-center bg-[#0F1113] p-4">
-      <div className="flex h-full max-h-[720px] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-[#2A2E33] bg-[#14171A] shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center gap-3 border-b border-[#2A2E33] bg-[#17191C] px-5 py-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#B8935A] to-[#8A6A3E]">
-            <Sparkles size={16} className="text-[#0F1113]" />
-          </div>
-          <div>
-            <h1 className="text-sm font-semibold tracking-wide text-[#EDEBE6]">
-              Intertopía · Consola Claude
-            </h1>
-            <p className="text-xs text-[#7C828A]">Asistente del sistema</p>
-          </div>
-        </div>
+  .box {
+    border: 1px solid #2A2D33;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    background: #16181C;
+    position: relative;
+  }
+  .box-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #EDEBE6;
+    margin-bottom: 3px;
+  }
+  .box-desc {
+    font-size: 12.5px;
+    color: #9A9EA6;
+    line-height: 1.4;
+  }
+  .box.broken {
+    border-color: #5A2E2E;
+    background: #1C1414;
+  }
+  .box.broken .box-title { color: #E58989; }
+  .box.ok {
+    border-color: #2E5A3E;
+    background: #131C16;
+  }
+  .box.ok .box-title { color: #7FCB9A; }
 
-        {/* Messages */}
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-lg px-4 py-2.5 text-sm leading-relaxed ${
-                  m.role === "user"
-                    ? "bg-[#B8935A] text-[#14171A]"
-                    : "bg-[#1E2226] text-[#C9CDD3] border border-[#2A2E33]"
-                }`}
-              >
-                {m.content}
-              </div>
-            </div>
-          ))}
-          {loading && (
-            <div className="flex justify-start">
-              <div className="flex items-center gap-2 rounded-lg border border-[#2A2E33] bg-[#1E2226] px-4 py-2.5 text-sm text-[#7C828A]">
-                <Loader2 size={14} className="animate-spin" />
-                Procesando
-              </div>
-            </div>
-          )}
-          <div ref={bottomRef} />
-        </div>
+  .arrow {
+    text-align: center;
+    color: #565A61;
+    font-size: 18px;
+    line-height: 1.2;
+    padding: 2px 0;
+  }
+  .arrow.fail { color: #C0504D; font-weight: 700; font-size: 13px; }
+  .arrow.ok { color: #4E9A66; }
 
-        {/* Input */}
-        <div className="border-t border-[#2A2E33] bg-[#17191C] p-3">
-          <div className="flex items-end gap-2">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Escribe tu mensaje..."
-              rows={1}
-              className="flex-1 resize-none rounded-lg border border-[#2A2E33] bg-[#0F1113] px-3 py-2.5 text-sm text-[#EDEBE6] placeholder-[#5A6068] outline-none focus:border-[#B8935A]"
-            />
-            <button
-              onClick={sendMessage}
-              disabled={loading || !input.trim()}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#B8935A] text-[#14171A] transition-opacity disabled:opacity-40"
-              aria-label="Enviar mensaje"
-            >
-              <Send size={16} />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-import json
-import os
+  .tag {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 3px;
+    margin-top: 6px;
+  }
+  .tag-mixed { background: #3A2E1E; color: #E5B989; }
+  .tag-missing { background: #3A1E1E; color: #E58989; }
+  .tag-clean { background: #1E3A26; color: #7FCB9A; }
 
-ARCHIVO_ESTADO = "patrimonio_base.json"
-ARCHIVO_HISTORIAL = "historial_ciclos.json"
+  .final-fail {
+    text-align: center;
+    background: #2A1414;
+    border: 1px solid #5A2E2E;
+    border-radius: 10px;
+    padding: 12px;
+    color: #E58989;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+  .final-ok {
+    text-align: center;
+    background: #142A1B;
+    border: 1px solid #2E5A3E;
+    border-radius: 10px;
+    padding: 12px;
+    color: #7FCB9A;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+  .divider {
+    max-width: 480px;
+    margin: 0 auto 40px;
+    border-top: 1px dashed #2A2D33;
+  }
+</style>
+</head>
+<body>
 
+<h1>Intertopía · Motor de Ciclos</h1>
+<div class="subtitle">Cómo estaba vs. cómo debe operar</div>
 
-def cargar_patrimonio_base():
-    """Lee el patrimonio base guardado de la corrida anterior.
-    Si no existe el archivo (primera vez), devuelve None."""
-    if os.path.exists(ARCHIVO_ESTADO):
-        with open(ARCHIVO_ESTADO, "r") as f:
-            data = json.load(f)
-            return data.get("patrimonio_base_usd")
-    return None
+<div class="section">
+  <span class="section-label label-antes">❌ Cómo estaba</span>
 
+  <div class="box broken">
+    <div class="box-title">GitHub Actions dispara push a main</div>
+    <div class="box-desc">publish.yml corre: <code>python main.py</code></div>
+  </div>
+  <div class="arrow fail">↓ busca main.py en la raíz</div>
 
-def guardar_patrimonio_base(valor):
-    """Guarda el patrimonio actual como base para la próxima corrida."""
-    with open(ARCHIVO_ESTADO, "w") as f:
-        json.dump({"patrimonio_base_usd": valor}, f, indent=2)
+  <div class="box broken">
+    <div class="box-title">Archivo: scripts/scripts/cloude</div>
+    <div class="box-desc">Sin extensión .py · Carpeta duplicada · Código React (dashboard) y código Python (ciclo financiero) pegados en un solo archivo</div>
+    <span class="tag tag-mixed">React + Python mezclados</span><br>
+    <span class="tag tag-missing">main.py no existe</span>
+  </div>
+  <div class="arrow fail">↓</div>
 
+  <div class="final-fail">Error: can't open file 'main.py'<br>El ciclo nunca se ejecuta</div>
+</div>
 
-def guardar_ciclo_en_historial(resultado):
-    """Agrega el resultado de este ciclo al historial acumulado."""
-    historial = []
-    if os.path.exists(ARCHIVO_HISTORIAL):
-        with open(ARCHIVO_HISTORIAL, "r") as f:
-            historial = json.load(f)
-    historial.append(resultado)
-    with open(ARCHIVO_HISTORIAL, "w") as f:
-        json.dump(historial, f, indent=2)
+<div class="divider"></div>
 
+<div class="section">
+  <span class="section-label label-despues">✅ Cómo debe operar</span>
 
-def ejecutar_ciclo_24h():
-    """Calcula el beneficio del ciclo (patrimonio actual - base) y lo
-    segrega 70% V.H.R.S / 30% Intertopía. El patrimonio base persiste
-    entre corridas leyendo/escribiendo patrimonio_base.json."""
+  <div class="box ok">
+    <div class="box-title">GitHub Actions dispara push a main</div>
+    <div class="box-desc">publish.yml corre: <code>python main.py</code></div>
+  </div>
+  <div class="arrow ok">↓</div>
 
-    reporte = get_patrimonio_actual()
-    patrimonio_actual = reporte["patrimonio_total_usd"]
+  <div class="box ok">
+    <div class="box-title">main.py (raíz del repo)</div>
+    <div class="box-desc">Solo lógica Python: precios en vivo, cálculo de patrimonio, reparto 90/10, fondo de respaldo</div>
+    <span class="tag tag-clean">Un solo propósito</span>
+  </div>
+  <div class="arrow ok">↓ llama a</div>
 
-    patrimonio_base = cargar_patrimonio_base()
+  <div class="box ok">
+    <div class="box-title">CoinGecko API + goldprice.org</div>
+    <div class="box-desc">Precio BTC · Precio oro/plata en vivo</div>
+  </div>
+  <div class="arrow ok">↓</div>
 
-    # Primera corrida real: no hay base guardada todavía.
-    # El capital depositado se vuelve la base, no se reparte como ganancia.
-    if patrimonio_base is None:
-        patrimonio_base = patrimonio_actual
-        beneficio = 0.0
-    else:
-        beneficio = patrimonio_actual - patrimonio_base
+  <div class="box ok">
+    <div class="box-title">alpaca_integration.py</div>
+    <div class="box-desc">Operaciones reales de tu cuenta Alpaca (opcional, para flujo de caja real)</div>
+  </div>
+  <div class="arrow ok">↓ guarda resultado en</div>
 
-    if beneficio > 0:
-        reparto_vhrs = round(beneficio * SPLIT_VHRS, 2)
-        reparto_intertopia = round(beneficio * SPLIT_INTERTOPIA, 2)
-    else:
-        reparto_vhrs = 0.0
-        reparto_intertopia = 0.0
+  <div class="box ok">
+    <div class="box-title">patrimonio_base.json + historial_ciclos.json</div>
+    <div class="box-desc">Persisten entre corridas → ya no se resetean a cero</div>
+  </div>
+  <div class="arrow ok">↓ (aparte, sin mezclar)</div>
 
-    resultado = {
-        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
-        "patrimonio_actual_usd": patrimonio_actual,
-        "patrimonio_base_usd": patrimonio_base,
-        "beneficio_usd": round(beneficio, 2),
-        "reparto": {
-            "vhrs_usd": reparto_vhrs,
-            "intertopia_usd": reparto_intertopia,
-            "split": f"{int(SPLIT_VHRS*100)}/{int(SPLIT_INTERTOPIA*100)}",
-        },
-    }
+  <div class="box ok">
+    <div class="box-title">dashboard.jsx (archivo separado)</div>
+    <div class="box-desc">Solo React — visualiza los datos, no ejecuta el ciclo</div>
+    <span class="tag tag-clean">Separado de main.py</span>
+  </div>
+  <div class="arrow ok">↓</div>
 
-    # El patrimonio de HOY se convierte en la base para el PRÓXIMO ciclo
-    guardar_patrimonio_base(patrimonio_actual)
-    guardar_ciclo_en_historial(resultado)
+  <div class="final-ok">Ciclo completo · Reparto 90/10 aplicado · Historial guardado</div>
+</div>
 
-    return resultado
+</body>
+</html>
