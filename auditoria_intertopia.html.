@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1ntertopia | Audit & Evolution Infographic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-deep: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #38bdf8;
+            --secondary: #c084fc;
+            --accent: #f472b6;
+            --danger: #ef4444;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        .cyber-card {
+            background-color: var(--card-bg);
+            border-left: 4px solid var(--primary);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .cyber-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .step-node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: var(--bg-deep);
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .flow-line {
+            width: 2px;
+            background: var(--primary);
+            flex-grow: 1;
+            margin-left: 19px;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+
+    <header class="max-w-6xl mx-auto mb-16 text-center">
+        <h1 class="text-5xl md:text-6xl font-black mb-4 tracking-tighter gradient-text uppercase">1ntertopia Audit</h1>
+        <p class="text-xl text-slate-400 max-w-3xl mx-auto">
+            A technical post-mortem and strategic visualization of the 1ntertopia V.H.R.S. environment. 
+            From a visual mirage to a production-grade secure architecture.
+        </p>
+    </header>
+
+    <main class="max-w-6xl mx-auto space-y-16">
+        <section>
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold mb-4 text-white">Critical Failure Points</h2>
+                <p class="text-slate-400 leading-relaxed max-w-4xl">
+                    The initial audit identified three catastrophic failures that compromise system stability and data integrity. 
+                    The visualization below ranks these based on their "System Downtime Risk" and "Data Exposure Probability."
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+                <div class="chart-container">
+                    <canvas id="bugChart"></canvas>
+                </div>
+                <div class="space-y-4">
+                    <div class="p-4 rounded bg-slate-800 border-l-4 border-red-500">
+                        <h3 class="font-bold text-red-400">ReferenceError: chatInput</h3>
+                        <p class="text-sm">Critical runtime failure. Any interaction with the Oracle module triggers a complete application crash.</p>
+                    </div>
+                    <div class="p-4 rounded bg-slate-800 border-l-4 border-orange-500">
+                        <h3 class="font-bold text-orange-400">Hardcoded Master Key</h3>
+                        <p class="text-sm">Security level zero. The system's "Signature" is visible to any browser inspector tool.</p>
+                    </div>
+                    <div class="p-4 rounded bg-slate-800 border-l-4 border-yellow-500">
+                        <h3 class="font-bold text-yellow-400">API Key Exposure</h3>
+                        <p class="text-sm">Financial risk. Direct client-side calls to Gemini expose billing credentials to the public.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold mb-4 text-white">System Health Assessment</h2>
+                <p class="text-slate-400 leading-relaxed max-w-4xl">
+                    By evaluating the current codebase across five technical dimensions, we see a significant imbalance between 
+                    Visual UX and Backend Integrity. The system is "Top-Heavy" with UI while lacking a foundation.
+                </p>
+            </div>
+            <div class="chart-container md:col-span-2">
+                <canvas id="riskRadar"></canvas>
+            </div>
+        </section>
+
+        <section>
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold mb-4 text-white">Architectural Evolution</h2>
+                <p class="text-slate-400 leading-relaxed max-w-4xl">
+                    Moving forward, the system can follow three distinct evolutionary paths. Option A addresses the core 
+                    vulnerabilities through structural change.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="cyber-card p-6 rounded-lg shadow-xl">
+                    <div class="text-cyan-400 font-black text-sm uppercase mb-2 tracking-widest">Recommended</div>
+                    <h3 class="text-2xl font-bold mb-4">Option A: Full-Stack</h3>
+                    <ul class="text-sm text-slate-300 space-y-3">
+                        <li class="flex items-start"><span class="mr-2 text-cyan-400">▶</span> Backend logic (Node/FastAPI) to hide API keys.</li>
+                        <li class="flex items-start"><span class="mr-2 text-cyan-400">▶</span> Persistent database for actual asset tracking.</li>
+                        <li class="flex items-start"><span class="mr-2 text-cyan-400">▶</span> Encrypted session management.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card p-6 rounded-lg shadow-xl" style="border-color: var(--secondary)">
+                    <div class="text-purple-400 font-black text-sm uppercase mb-2 tracking-widest">Immersive</div>
+                    <h3 class="text-2xl font-bold mb-4">Option B: CLI Focus</h3>
+                    <ul class="text-sm text-slate-300 space-y-3">
+                        <li class="flex items-start"><span class="mr-2 text-purple-400">▶</span> Pure Terminal Interface for the "Operator" persona.</li>
+                        <li class="flex items-start"><span class="mr-2 text-purple-400">▶</span> Command-driven navigation and diagnostics.</li>
+                        <li class="flex items-start"><span class="mr-2 text-purple-400">▶</span> Minimalistic, high-speed performance.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card p-6 rounded-lg shadow-xl" style="border-color: var(--accent)">
+                    <div class="text-pink-400 font-black text-sm uppercase mb-2 tracking-widest">Analytical</div>
+                    <h3 class="text-2xl font-bold mb-4">Option C: Modular</h3>
+                    <ul class="text-sm text-slate-300 space-y-3">
+                        <li class="flex items-start"><span class="mr-2 text-pink-400">▶</span> Drag & Drop grid layout system.</li>
+                        <li class="flex items-start"><span class="mr-2 text-pink-400">▶</span> Customizable widget density (Charts, Maps, Feeds).</li>
+                        <li class="flex items-start"><span class="mr-2 text-pink-400">▶</span> Extensible architecture for new data sources.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="pb-20">
+            <div class="mb-12">
+                <h2 class="text-3xl font-bold mb-4 text-white">The Roadmap to Production</h2>
+                <p class="text-slate-400 leading-relaxed max-w-4xl">
+                    Turning 1ntertopia into a secure platform requires a four-phase transition from the current "Visual Mirage" 
+                    to a validated environment.
+                </p>
+            </div>
+            <div class="flex flex-col space-y-0 max-w-2xl mx-auto">
+                <div class="flex">
+                    <div class="flex flex-col items-center mr-6">
+                        <div class="step-node">01</div>
+                        <div class="flow-line"></div>
+                    </div>
+                    <div class="pb-10">
+                        <h4 class="text-lg font-bold text-cyan-400">Immediate Refactor</h4>
+                        <p class="text-slate-400 text-sm">Repairing the <code>chatInput</code> ReferenceError and isolating current keys into environment variables.</p>
+                    </div>
+                </div>
+                <div class="flex">
+                    <div class="flex flex-col items-center mr-6">
+                        <div class="step-node">02</div>
+                        <div class="flow-line"></div>
+                    </div>
+                    <div class="pb-10">
+                        <h4 class="text-lg font-bold text-cyan-400">Backend Decoupling</h4>
+                        <p class="text-slate-400 text-sm">Moving API interaction (Gemini/Financial APIs) to a secure Node.js middleware layer.</p>
+                    </div>
+                </div>
+                <div class="flex">
+                    <div class="flex flex-col items-center mr-6">
+                        <div class="step-node">03</div>
+                        <div class="flow-line"></div>
+                    </div>
+                    <div class="pb-10">
+                        <h4 class="text-lg font-bold text-cyan-400">Data Normalization</h4>
+                        <p class="text-slate-400 text-sm">Connecting visual charts to real-time data streams via WebSockets instead of static JSON.</p>
+                    </div>
+                </div>
+                <div class="flex">
+                    <div class="flex flex-col items-center mr-6">
+                        <div class="step-node">04</div>
+                        <div class="bg-transparent border-none"></div>
+                    </div>
+                    <div class="pb-0">
+                        <h4 class="text-lg font-bold text-cyan-400">Security Hardening</h4>
+                        <p class="text-slate-400 text-sm">Deployment of JWT Auth and Rate Limiting for the 1ntertopia Gateway.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function wrapLabel(label) {
+            if (label.length <= 16) return label;
+            const words = label.split(' ');
+            const lines = [];
+            let currentLine = "";
+            words.forEach(word => {
+                if ((currentLine + word).length > 16) {
+                    lines.push(currentLine.trim());
+                    currentLine = word + " ";
+                } else {
+                    currentLine += word + " ";
+                }
+            });
+            lines.push(currentLine.trim());
+            return lines;
+        }
+
+        const tooltipConfig = {
+            callbacks: {
+                title: function(tooltipItems) {
+                    const item = tooltipItems[0];
+                    let label = item.chart.data.labels[item.dataIndex];
+                    if (Array.isArray(label)) {
+                        return label.join(' ');
+                    } else {
+                        return label;
+                    }
+                }
+            }
+        };
+
+        const bugCtx = document.getElementById('bugChart').getContext('2d');
+        new Chart(bugCtx, {
+            type: 'bar',
+            data: {
+                labels: [
+                    wrapLabel('Reference Error Chat Crash'),
+                    wrapLabel('Exposed Master Signature Key'),
+                    wrapLabel('Client Side API Key Usage')
+                ],
+                datasets: [{
+                    label: 'Impact Score (1-10)',
+                    data: [9.5, 8.5, 7.5],
+                    backgroundColor: ['#ef4444', '#f97316', '#eab308'],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: tooltipConfig
+                },
+                scales: {
+                    x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' }, max: 10 },
+                    y: { grid: { display: false }, ticks: { color: '#f1f5f9' } }
+                }
+            }
+        });
+
+        const riskCtx = document.getElementById('riskRadar').getContext('2d');
+        new Chart(riskCtx, {
+            type: 'radar',
+            data: {
+                labels: [
+                    wrapLabel('Visual Polish'),
+                    wrapLabel('Data Privacy'),
+                    wrapLabel('Backend Security'),
+                    wrapLabel('Financial Safety'),
+                    wrapLabel('Code Integrity')
+                ],
+                datasets: [
+                    {
+                        label: 'Current Status',
+                        data: [95, 15, 10, 20, 30],
+                        borderColor: '#38bdf8',
+                        backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                        pointBackgroundColor: '#38bdf8'
+                    },
+                    {
+                        label: 'Target Benchmark',
+                        data: [80, 90, 85, 95, 90],
+                        borderColor: '#c084fc',
+                        backgroundColor: 'rgba(192, 132, 252, 0.2)',
+                        pointBackgroundColor: '#c084fc'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#f1f5f9' } },
+                    tooltip: tooltipConfig
+                },
+                scales: {
+                    r: {
+                        angleLines: { color: '#334155' },
+                        grid: { color: '#334155' },
+                        pointLabels: { color: '#f1f5f9', font: { size: 10 } },
+                        ticks: { display: false, stepSize: 20 },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
