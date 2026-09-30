@@ -1,5 +1,5 @@
 """
-SISTEMA INTERTOPIA v2026.06.30
+INTERTOPIA Terminal Engine v2026.06.30
 Administrador: Víctor Hugo Ramírez Salgado
 Estado: Operativo / Segregación de sistemas activada
 
@@ -7,8 +7,8 @@ Requiere:
     pip install requests --break-system-packages
 
 APIs usadas:
-    - CoinGecko (BTC, USD)          -> gratuita, sin API key
-    - goldprice.org (oro y plata)   -> gratuita, sin API key
+    - CoinGecko (BTC, USD)      -> gratuita, sin API key
+    - goldprice.org (oro y plata) -> gratuita, sin API key
     - Rodio (rhodium): no existe una API pública gratuita confiable.
       Se deja un override manual (RHODIUM_PRICE_OVERRIDE) hasta integrar
       un proveedor de pago (ej. metals-api.com, mejor con API key propia).
@@ -17,28 +17,28 @@ APIs usadas:
 import requests
 from datetime import datetime, timezone
 
-# ----------------------------------------------------------------------
+# -------------------------------------------------------
 # CONFIGURACIÓN
-# ----------------------------------------------------------------------
+# -------------------------------------------------------
 
 # Si no se puede consultar el precio del rodio en vivo, se usa este valor.
 # Actualízalo manualmente hasta tener una fuente API confiable.
 RHODIUM_PRICE_OVERRIDE_USD_OZ = 5200.00
 
 # Segregación de beneficios (tal como pediste: 70/30)
-SPLIT_VHRS = 0.70          # Víctor Hugo Ramírez Salgado
-SPLIT_INTERTOPIA = 0.30    # Sistema Intertopía
+SPLIT_VHRS = 0.70        # Víctor Hugo Ramírez Salgado
+SPLIT_INTERTOPIA = 0.30  # Sistema Intertopía
 # NOTA: el comentario original decía "70/30" pero los números en el código
 # eran 0.90/0.10. Aquí se aplicó 70/30 según tu último mensaje.
-# Si en realidad querías 90/10, cambia las dos constantes de arriba.
+# Si en realidad quería 90/10, cambia las dos constantes de arriba.
 
 assets = {
     "vault": "Víctor Hugo's Personal Vault",
-    "gold_reserves_oz": 2.0,     # Operación diaria base
-    "silver_reserves_oz": 0.0,   # Acumulación de plata
-    "energy_units": 0,           # Objetivo: 10
-    "rhodium_units": 0.0,        # Onzas de rodio acumuladas
-    "btc_balance": 0.0,          # Turbo hasta 141 BTC
+    "gold_reserves_oz": 2.0,      # Operación diaria base
+    "silver_reserves_oz": 0.0,    # Acumulación de plata
+    "energy_units": 0,            # Objetivo: 10
+    "rhodium_units": 0.0,         # Onzas de rodio acumuladas
+    "btc_balance": 0.0,           # Turbo hasta 141 BTC
     "h2o_liquidity": 0.0
 }
 
@@ -47,9 +47,9 @@ assets = {
 PATRIMONIO_BASE_USD = 0.0
 
 
-# ----------------------------------------------------------------------
+# -------------------------------------------------------
 # CONEXIÓN A APIS EN VIVO
-# ----------------------------------------------------------------------
+# -------------------------------------------------------
 
 def get_btc_price_usd():
     """Obtiene el precio actual de BTC en USD desde CoinGecko."""
@@ -84,7 +84,7 @@ def get_rhodium_price_usd():
     """
     Precio del rodio. No hay API pública gratuita confiable, así que se usa
     el override manual definido arriba. Reemplaza esta función si conectas
-    un proveedor de pago (ej. metals-api.com).
+    un proveedor de pago (ej. metals-api.com, mejor con API key propia).
     """
     return RHODIUM_PRICE_OVERRIDE_USD_OZ
 
@@ -109,9 +109,9 @@ def actualizar_precios():
     return precios
 
 
-# ----------------------------------------------------------------------
+# -------------------------------------------------------
 # CÁLCULO DE PATRIMONIO
-# ----------------------------------------------------------------------
+# -------------------------------------------------------
 
 def get_patrimonio_actual():
     """Calcula el valor del patrimonio total en tiempo real, incluyendo
@@ -140,9 +140,9 @@ def get_patrimonio_actual():
     }
 
 
-# ----------------------------------------------------------------------
+# -------------------------------------------------------
 # SEGREGACIÓN 70/30
-# ----------------------------------------------------------------------
+# -------------------------------------------------------
 
 def ejecutar_ciclo_24h():
     """Calcula el beneficio del ciclo (patrimonio actual - base) y lo
@@ -178,9 +178,9 @@ def ejecutar_ciclo_24h():
     return resultado
 
 
-# ----------------------------------------------------------------------
+# -------------------------------------------------------
 # INFORME DE EJECUCIÓN
-# ----------------------------------------------------------------------
+# -------------------------------------------------------
 
 if __name__ == "__main__":
     print(f"Informe de Patrimonio: {get_patrimonio_actual()}")
