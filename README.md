@@ -1,41 +1,139 @@
-# Typing Extensions
+# 🌍 INTERTOPIA Terminal Engine
 
-[![Chat at https://gitter.im/python/typing](https://badges.gitter.im/python/typing.svg)](https://gitter.im/python/typing)
+Sistema integral de gestión de patrimonio y análisis financiero para Víctor Hugo Ramírez Salgado.
 
-[Documentation](https://typing-extensions.readthedocs.io/en/latest/#) –
-[PyPI](https://pypi.org/project/typing-extensions/)
+## 🎯 Características
 
-## Overview
+✅ **API REST BBVA** - Plantilla de integración bancaria  
+✅ **Terminal Personal** - Interface admin/lectura  
+✅ **Panel de Ajustes** - Modificar activos y tasas  
+✅ **Calculadora de Patrimonio** - Consulta en tiempo real  
+✅ **Estructura modular** - Listo para expansion  
 
-The `typing_extensions` module serves two related purposes:
+## 📁 Estructura del Proyecto
 
-- Enable use of new type system features on older Python versions. For example,
-  `typing.TypeGuard` is new in Python 3.10, but `typing_extensions` allows
-  users on previous Python versions to use it too.
-- Enable experimentation with new type system PEPs before they are accepted and
-  added to the `typing` module.
+```
+VHRS/
+├── main.py                    # Motor principal
+├── config/
+│   ├── .env.template         # Plantilla de credenciales
+│   ├── .env                  # Credenciales locales (git-ignored)
+│   └── README.md             # Documentación de config
+├── api/
+│   ├── __init__.py
+│   └── bbva_template.py      # Plantilla API BBVA
+├── terminal/
+│   ├── __init__.py
+│   └── personal_terminal.py  # Terminal personal
+├── panel/
+│   ├── __init__.py
+│   └── settings_panel.py     # Panel de ajustes
+├── utils/
+│   ├── __init__.py
+│   └── wealth_calculator.py  # Calculadora patrimonio
+└── .github/workflows/
+    └── publish.yml           # CI/CD automático
+```
 
-`typing_extensions` is treated specially by static type checkers such as
-mypy and pyright. Objects defined in `typing_extensions` are treated the same
-way as equivalent forms in `typing`.
+## 🚀 Modo de Uso
 
-`typing_extensions` uses
-[Semantic Versioning](https://semver.org/). The
-major version will be incremented only for backwards-incompatible changes.
-Therefore, it's safe to depend
-on `typing_extensions` like this: `typing_extensions ~=x.y`,
-where `x.y` is the first version that includes all features you need.
-[This](https://packaging.python.org/en/latest/specifications/version-specifiers/#compatible-release)
-is equivalent to `typing_extensions >=x.y, <(x+1)`. Do not depend on `~= x.y.z`
-unless you really know what you're doing; that defeats the purpose of
-semantic versioning.
+### Modo Interactivo (Local)
+```bash
+pip install -r requirements.txt
+python main.py
+```
 
-## Included items
+### Modo CI/CD (Automático)
+```bash
+python main.py --ci
+```
 
-See [the documentation](https://typing-extensions.readthedocs.io/en/latest/#) for a
-complete listing of module contents.
+## 🔧 Configuración
 
-## Contributing
+1. **Copia el template:**
+   ```bash
+   cp config/.env.template config/.env
+   ```
 
-See [CONTRIBUTING.md](https://github.com/python/typing_extensions/blob/main/CONTRIBUTING.md)
-for how to contribute to `typing_extensions`.
+2. **Completa credenciales BBVA:**
+   - Obtén acceso al portal de desarrolladores de BBVA
+   - Agrega CLIENT_ID, CLIENT_SECRET y datos de cuenta
+
+3. **Variables de entorno:**
+   ```
+   BBVA_CLIENT_ID=xxx
+   BBVA_CLIENT_SECRET=xxx
+   BBVA_ACCOUNT_NUMBER=xxx
+   ALPACA_API_KEY_ID=xxx
+   ALPACA_API_SECRET_KEY=xxx
+   GEMINI_API_KEY=xxx
+   GITHUB_TOKEN=xxx
+   ```
+
+## 📦 Módulos
+
+### 🏦 API BBVA (`api/bbva_template.py`)
+- Plantilla de cliente API
+- Autenticación OAuth2 (pendiente)
+- Consulta de cuentas y saldo
+- Transacciones (seguridad en desarrollo)
+
+### 💻 Terminal Personal (`terminal/personal_terminal.py`)
+- Interface para Víctor Hugo
+- Permisos: Admin + Lectura
+- Visualización de portafolio
+- Historial de operaciones
+
+### ⚙️ Panel de Ajustes (`panel/settings_panel.py`)
+- Modificar activos
+- Ajustar tasas de interés
+- Configuración del sistema
+
+### 💰 Calculadora (`utils/wealth_calculator.py`)
+- Patrimonio en tiempo real
+- Activos y pasivos
+- Cálculo de patrimonio neto
+
+## 🔐 Seguridad
+
+- ⚠️ `.env` está en `.gitignore` (nunca commitear credenciales)
+- 🔒 Usa GitHub Secrets para CI/CD
+- 🚫 Operaciones bancarias requieren doble autenticación
+- 🛡️ Plantilla sin operaciones reales hasta configuración completa
+
+## 📊 Estado del Proyecto
+
+| Módulo | Status | Próximo Paso |
+|--------|--------|----------|
+| 🏦 API BBVA | 🟡 Plantilla | Implementar OAuth2 |
+| 💻 Terminal | 🟡 Plantilla | Conectar con API |
+| ⚙️ Panel | 🟡 Plantilla | UI/UX |
+| 💰 Calculadora | 🟡 Plantilla | Integrar APIs |
+
+## 🔄 Workflow CI/CD
+
+✅ Automático en cada `push` a `main`  
+✅ Python 3.10  
+✅ Instala dependencias  
+✅ Ejecuta validación  
+✅ Genera reportes  
+
+## 📝 Próximos Pasos
+
+- [ ] Configurar credenciales BBVA
+- [ ] Implementar autenticación OAuth2
+- [ ] Conectar APIs reales
+- [ ] Crear interfaz web/CLI avanzada
+- [ ] Tests unitarios
+- [ ] Documentación API
+- [ ] Deploy en producción
+
+## 👨‍💻 Autor
+
+**Víctor Hugo Ramírez Salgado**  
+INTERTOPIA Project  
+2026
+
+---
+
+**Status:** 🟢 Operacional - Esperando configuración BBVA

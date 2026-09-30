@@ -1,0 +1,7 @@
+# Ignorar credenciales locales
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+credentials.json
