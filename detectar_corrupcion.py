@@ -1,7 +1,7 @@
 name: Diagnostico de archivos corruptos
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:main
 
 jobs:
   revisar:
