@@ -12,4 +12,4 @@ jobs:
         with:
           python-version: '3.11'
       - name: Ejecutar diagnostico
-        run: python detectar_corrupcion.py
+        run: python detectar_corrupcion.py.
