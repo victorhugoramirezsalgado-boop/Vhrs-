@@ -1,0 +1,48 @@
+import json
+
+def compilar_cv_markdown():
+    print("> [TERMINAL VHRS] Procesando estructura de datos de cv_master_intertopia.json...")
+    
+    try:
+        with open("cv_master_intertopia.json", "r", encoding="utf-8") as f:
+            datos = json.load(f)
+            
+        # Generación de estructura del documento
+        cv_md = f"# CURRÍCULUM MÁSTER - {datos.get('identidad', 'Víctor Hugo Ramírez Salgado').upper()}\n\n"
+        cv_md += f"**ORCID:** {datos.get('orcid', '0009-0002-7831-8433')} | **CVU Conahcyt:** {datos.get('cvu_conahcyt', '510376')}\n"
+        cv_md += "---\n\n"
+        
+        cv_md += "## EDUCACIÓN Y FORMACIÓN\n"
+        for edu in datos.get('educacion', []):
+            resumen = edu.get('summaries', [{}])[0].get('education-summary', {})
+            institucion = resumen.get('organization', {}).get('name', 'Institución no especificada')
+            titulo = resumen.get('role-title', 'Grado no especificado')
+            cv_md += f"* **{titulo}** — {institucion}\n"
+            
+        cv_md += "\n## EXPERIENCIA OPERATIVA Y PROFESIONAL\n"
+        for emp in datos.get('empleos', []):
+            resumen = emp.get('summaries', [{}])[0].get('employment-summary', {})
+            organizacion = resumen.get('organization', {}).get('name', 'Organización no especificada')
+            cargo = resumen.get('role-title', 'Cargo no especificado')
+            cv_md += f"* **{cargo}** — {organizacion}\n"
+
+        cv_md += "\n## INVESTIGACIÓN Y PUBLICACIONES\n"
+        for pub in datos.get('publicaciones', []):
+            resumen = pub.get('summaries', [{}])[0].get('work-summary', {})
+            titulo_pub = resumen.get('title', {}).get('title', {}).get('value', 'Título no especificado')
+            cv_md += f"* {titulo_pub}\n"
+
+        # Guardar archivo de salida
+        with open("CV_Master_VHRS.md", "w", encoding="utf-8") as f:
+            f.write(cv_md)
+            
+        print("[ÉXITO] Compilación finalizada. Archivo 'CV_Master_VHRS.md' generado en el directorio raíz.")
+        print("[SISTEMA] Listo para revisión documental o validación de repositorios.")
+        
+    except FileNotFoundError:
+        print("[ERROR] No se encontró 'cv_master_intertopia.json'. Ejecuta primero la extracción ORCID.")
+    except Exception as e:
+        print(f"[ERROR CRÍTICO] Falla en la estructuración de datos: {e}")
+
+if __name__ == "__main__":
+    compilar_cv_markdown()
