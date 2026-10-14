@@ -1,0 +1,26 @@
+name: Sincronizar CV ORCID Intertopía
+on:
+  schedule:
+    - cron: '0 0 1 * *' # Ejecuta el día 1 de cada mes
+  workflow_dispatch:
+
+jobs:
+  update-cv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Instalar dependencias
+        run: pip install requests
+      - name: Ejecutar script de extracción
+        run: python tu_script_orcid.py
+      - name: Commit y Push a Vhrs-
+        run: |
+          git config --global user.name "Víctor Hugo Ramírez Salgado"
+          git config --global user.email "admin@intertopia"
+          git add cv_intertopia.json
+          git commit -m "Actualización automática de CV vía ORCID [Intertopía]"
+          git push
