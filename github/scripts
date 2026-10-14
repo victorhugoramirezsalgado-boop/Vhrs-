@@ -1,0 +1,72 @@
+gemini_reviewer.py
+import os
+import sys
+import requests
+import google.generativeai as genai
+
+# Variables de entorno seguras de Intertopía
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+REPO = os.getenv("GITHUB_REPOSITORY")
+PR_NUMBER = os.getenv("PR_NUMBER")
+
+def obtener_diff():
+    url = f"https://api.github.com/repos/{REPO}/pulls/{PR_NUMBER}"
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3.diff"
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return response.text
+    else:
+        print(f"[ERROR] Acceso denegado al diff: {response.status_code}")
+        sys.exit(1)
+
+def comentar_pr(comentario):
+    url = f"https://api.github.com/repos/{REPO}/issues/{PR_NUMBER}/comments"
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    data = {"body": comentario}
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code == 201:
+        print("[ÉXITO] Revisión de Intertopía publicada en GitHub.")
+    else:
+        print(f"[ERROR] Fallo al publicar el comentario: {response.status_code}")
+
+def auditar_codigo_gemini():
+    print("> [TERMINAL VHRS] Inicializando API Gemini para Víctor Hugo Ramírez Salgado...")
+    diff = obtener_diff()
+    
+    if not diff.strip():
+        print("[INFO] No hay cambios sustanciales para revisar.")
+        return
+
+    # Configuración de la IA
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel('gemini-1.5-pro')
+    
+    prompt = (
+        "Como inteligencia del Sistema Intertopía y asistente exclusivo de Víctor Hugo Ramírez Salgado, "
+        "revisa el siguiente código. Busca vulnerabilidades de seguridad, optimización de recursos y "
+        "errores lógicos. Responde de forma directa, corta y precisa como una terminal.\n\n"
+        f"Código modificado:\n{diff}"
+    )
+    
+    respuesta = model.generate_content(prompt)
+    
+    comentario_final = (
+        "### 🛡️ Auditoría Intertopía / API Gemini\n"
+        "**Administrador:** Víctor Hugo Ramírez Salgado\n\n"
+        f"{respuesta.text}"
+    )
+    
+    comentar_pr(comentario_final)
+
+if __name__ == "__main__":
+    if not all([GEMINI_API_KEY, GITHUB_TOKEN, REPO, PR_NUMBER]):
+        print("[ERROR CRÍTICO] Faltan credenciales de seguridad en el entorno VHRS.")
+        sys.exit(1)
+    auditar_codigo_gemini()
