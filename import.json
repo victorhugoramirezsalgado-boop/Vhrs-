@@ -1,0 +1,62 @@
+import json
+
+def generar_cvu_estandar(datos_orcid_crudos):
+    print("[Vhrs- Terminal] Procesando mapeo de metadatos ORCID a formato CVU/SNI...")
+    
+    # Esqueleto estructural para postulación académica nacional e internacional
+    cvu_intertopia = {
+        "identidad_soberana": {
+            "nombre_legal": "Víctor Hugo Ramírez Salgado",
+            "orcid_id": "TU_ORCID",
+            "perfil_objetivo": "Ingreso SNI / Repositorio Institucional"
+        },
+        "formacion_academica": [],      # Ej. Doctorado en Administración
+        "trayectoria_profesional": [],  # Ej. Dirección de Estadística / Operaciones
+        "produccion_y_tecnologia": {
+            "publicaciones": [],
+            "propiedad_intelectual_y_patentes": [] # Ej. Registros Safe Creative / Códigos GitHub
+        }
+    }
+    
+    # 1. Extracción y normalización de Educación
+    for edu in datos_orcid_crudos.get("educacion", []):
+        resumen = edu.get("education-summary", {})
+        cvu_intertopia["formacion_academica"].append({
+            "institucion": resumen.get("organization", {}).get("name", ""),
+            "grado": resumen.get("role-title", ""),
+            "año_inicio": resumen.get("start-date", {}).get("year", {}).get("value", "")
+        })
+
+    # 2. Extracción y normalización de Trayectoria Profesional
+    for empleo in datos_orcid_crudos.get("empleos", []):
+        resumen = empleo.get("employment-summary", {})
+        cvu_intertopia["trayectoria_profesional"].append({
+            "institucion": resumen.get("organization", {}).get("name", ""),
+            "cargo": resumen.get("role-title", ""),
+            "año_inicio": resumen.get("start-date", {}).get("year", {}).get("value", "")
+        })
+
+    # 3. Clasificación de Producción Tecnológica y Académica
+    for obra in datos_orcid_crudos.get("publicaciones", []):
+        resumen = obra.get("work-summary", [{}])[0]
+        tipo_obra = resumen.get("type", "")
+        
+        item = {
+            "titulo": resumen.get("title", {}).get("title", {}).get("value", ""),
+            "identificador_doi_url": resumen.get("url", {}).get("value", "N/A")
+        }
+        
+        # Filtro de bifurcación: Separa papers de registros de software/patentes (Concepto Intertopía)
+        if tipo_obra in ["software", "patent", "intellectual-property"]:
+            cvu_intertopia["produccion_y_tecnologia"]["propiedad_intelectual_y_patentes"].append(item)
+        else:
+            cvu_intertopia["produccion_y_tecnologia"]["publicaciones"].append(item)
+
+    # Exportar archivo estructurado final
+    with open("cvu_estandar_intertopia.json", "w", encoding="utf-8") as archivo_salida:
+        json.dump(cvu_intertopia, archivo_salida, indent=4, ensure_ascii=False)
+        
+    print("[ÉXITO] Archivo cvu_estandar_intertopia.json generado. Estructura compatible y lista para auditoría.")
+
+# Llamada a la función asumiendo que 'cv_data' es el diccionario extraído en el paso anterior
+# generar_cvu_estandar(cv_data)
