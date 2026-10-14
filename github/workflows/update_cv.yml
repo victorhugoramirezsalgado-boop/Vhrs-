@@ -1,0 +1,36 @@
+import requests
+import json
+
+# Variables de entorno del Administrador
+ORCID_ID = "TU_ORCID_ID_AQUI"  # Ejemplo: 0000-0002-XXXX-XXXX
+URL_ORCID = f"https://pub.orcid.org/v3.0/{ORCID_ID}/record"
+
+headers = {
+    "Accept": "application/json"
+}
+
+def obtener_cv_orcid():
+    print(f"[{ORCID_ID}] Solicitando datos para Víctor Hugo Ramírez Salgado...")
+    response = requests.get(URL_ORCID, headers=headers)
+    
+    if response.status_code == 200:
+        datos = response.json()
+        
+        # Filtrar secciones clave para el CV
+        cv_data = {
+            "empleos": datos.get("activities-summary", {}).get("employments", {}).get("affiliation-group", []),
+            "educacion": datos.get("activities-summary", {}).get("educations", {}).get("affiliation-group", []),
+            "publicaciones": datos.get("activities-summary", {}).get("works", {}).get("group", [])
+        }
+        
+        # Guardar archivo en el repositorio local para sincronización con GitHub
+        with open("cv_intertopia.json", "w", encoding="utf-8") as f:
+            json.dump(cv_data, f, indent=4, ensure_ascii=False)
+            
+        print("[ÉXITO] CV actualizado en cv_intertopia.json. Listo para push a Vhrs-.")
+    else:
+        print(f"[ERROR] Código de estado: {response.status_code}")
+
+if __name__ == "__main__":
+    obtener_cv_orcid()
+
